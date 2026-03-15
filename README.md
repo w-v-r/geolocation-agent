@@ -1,6 +1,8 @@
 # Geolocation Agent
 
-A geolocation agent that determines where a photo was taken through iterative exploration of hypotheses. Collecting clues and proceeding as a good detective should.
+**Where was this photo taken?** Drop in an image and let the agent work: it extracts clues, narrows regions, searches the web, checks maps and Street View, and iterates until it lands on a location—or admits it can't.
+
+Inspired by Rainbolt-style geoguessing and the idea of automating OSINT. Vision LLM + search + maps, working like a detective.
 
 ## Setup
 
