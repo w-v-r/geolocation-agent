@@ -14,6 +14,11 @@ def merge_lists(left: list[dict], right: list[dict]) -> list[dict]:
     return list(merged.values())
 
 
+def append_lists(left: list[dict], right: list[dict]) -> list[dict]:
+    """Append-only reducer for lists that don't need deduplication (e.g. tool history)."""
+    return left + right
+
+
 class AgentState:
     """LangGraph agent state definition.
 
@@ -29,6 +34,7 @@ class AgentState:
     candidates: Annotated[list[dict], merge_lists]
     evidence_log: Annotated[list[dict], merge_lists]
     eliminated: Annotated[list[dict], merge_lists]
+    tool_history: Annotated[list[dict], append_lists]
     iteration: int
     max_iterations: int
     phase: str

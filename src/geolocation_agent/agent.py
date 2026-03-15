@@ -83,6 +83,7 @@ def run_investigation(
         "candidates": [],
         "evidence_log": [],
         "eliminated": [],
+        "tool_history": [],
         "iteration": 0,
         "max_iterations": max_iterations or settings.max_iterations,
         "phase": "extract_metadata",

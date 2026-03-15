@@ -72,3 +72,33 @@
 **Decision**: All tools return JSON strings rather than Pydantic models.
 
 **Rationale**: LangChain tools must return strings (or simple types) to be compatible with the LLM tool-calling interface. The LLM receives the JSON string as context and can parse the relevant fields. The Pydantic models exist for documentation and validation, but the tool interface stays simple.
+
+## 10. Programmatic Enforcement Over Prompt-Only Guidance
+
+**Decision**: Use code-level checks (clue count threshold, evidence recording reminders, hypothesis staleness detection) rather than relying solely on prompt instructions.
+
+**Rationale**: Testing revealed that the LLM frequently ignores prompt-level instructions about recording evidence, maintaining hypothesis diversity, and extracting sufficient clues. The system prompt already contained rules like "do not spend more than 2 iterations on a hypothesis with no progress" and "always record evidence in the evidence tracker" -- but the LLM violated both consistently across multiple runs. Programmatic enforcement catches these violations and injects corrective messages. This is a belt-and-suspenders approach: the prompts guide the LLM's intent, and the code enforces the minimum standard when the LLM fails to comply.
+
+**Trade-off**: More complex node code. The investigate node now tracks which tools were used per round and whether evidence was recorded. The hypothesize node computes staleness scores. These add ~50 lines of logic but address failure modes that were 100% reproducible.
+
+## 11. Tool History as Shared State
+
+**Decision**: Track all tool calls (name, args, result summary, iteration) in a `tool_history` state field and include the last 15 entries in every state summary.
+
+**Rationale**: Without tool history, each LLM invocation within a new iteration has no memory of what was tried before. In testing, the exact same web search query ("coastal winery with large tree and outdoor seating Provence") was repeated across 10 iterations. Tool history gives the LLM visibility into past attempts so it can vary its approach. The `append_lists` reducer (not `merge_lists`) is used since tool calls don't have natural IDs to merge on and should always accumulate.
+
+**Trade-off**: Adds tokens to the state summary. Capped at last 15 entries to limit context growth.
+
+## 12. Minimum Clue Threshold with Retry
+
+**Decision**: If the analyze phase extracts fewer than 3 clues, retry with a more directive prompt.
+
+**Rationale**: In one test run, the LLM zoomed and cropped the image but never called `add_clue`, producing 0 clues. The entire downstream investigation was built on ungrounded guesses. The retry prompt lists specific categories to inspect (vegetation species, chair styles, building materials, barrels/equipment, terrain) which gives the LLM concrete targets. Three was chosen as the minimum because any photograph with enough detail to geolocate should yield at least 3 distinct observations.
+
+**Alternative considered**: Making the number configurable. Deferred -- 3 is a safe floor for now.
+
+## 13. Report Grounding Constraints
+
+**Decision**: The report prompt includes explicit counts of candidates and evidence from the actual state, with rules forbidding fabrication when counts are zero.
+
+**Rationale**: In testing, the report phase hallucinated evidence -- claiming "Reverse image searches yielded matches with Chateau de Berne" when every reverse search had failed. The LLM received the state summary (showing 0 candidates, 0 evidence) but ignored it. Adding hard constraints like "You have 0 candidates. Do NOT fabricate a venue name." directly in the prompt reduces (but does not eliminate) hallucination in the report.

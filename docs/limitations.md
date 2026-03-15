@@ -43,7 +43,13 @@ When the LLM called image tools (`crop_image`, `zoom_image`, `adjust_image`, `ex
 
 **Fix applied**: The `_inject_image_path` helper in `nodes.py` now intercepts all tool calls that accept an `image_path` parameter and overrides them with the real path from agent state. The image path is also resolved to an absolute path at the start of the investigation and communicated to the LLM in the prompt text as a belt-and-suspenders measure.
 
-### 6. Evidence Tracker State Integration Is Fragile
+### 6. ~~Evidence Tracker Not Used During Investigation~~ (MITIGATED)
+
+In initial testing, the LLM consistently failed to call `add_candidate` and `add_evidence` during the investigate phase. It would perform web searches and Street View lookups but never record the results in structured form. This meant confidence stayed at 0% forever and the report had no evidence to reference.
+
+**Mitigation applied**: The investigate prompt now explicitly requires evidence recording after every search. The investigate node detects when search/maps tools were used without recording evidence and injects a reminder message. The state summary shows empty evidence/candidate counts with instructional text. These measures significantly increase evidence recording rates but do not guarantee it -- the LLM may still occasionally skip recording.
+
+### 7. Evidence Tracker State Integration Is Fragile
 
 The evidence tracker tools (`add_clue`, `add_hypothesis`, etc.) return JSON strings. The node code in `nodes.py` then parses these results and routes them into the correct state field based on ID prefix (`clue_`, `hyp_`, `cand_`, `ev_`). This means:
 
@@ -53,7 +59,19 @@ The evidence tracker tools (`add_clue`, `add_hypothesis`, etc.) return JSON stri
 
 **Impact**: Investigation state can become inconsistent if the LLM produces malformed tool calls or references non-existent IDs.
 
-### 6. Google Maps Places Coverage Is Sparse in Rural/Niche Areas
+### 8. ~~Hypothesis Tunneling~~ (MITIGATED)
+
+In initial testing, the LLM would lock into a single regional hypothesis (e.g. "Provence, France") and never reconsider despite finding zero supporting evidence across 10 iterations. The same hypotheses were duplicated every iteration (3 → 6 → 12 → 49).
+
+**Mitigation applied**: Staleness detection automatically tracks how many iterations each hypothesis has survived without new evidence and flags stale ones for demotion. Diversity enforcement requires at least 2 competing region-level hypotheses. The hypothesize prompt warns against re-adding duplicates. However, the LLM may still show bias toward its initial guess.
+
+### 9. ~~Analyze Phase Could Produce 0 Clues~~ (MITIGATED)
+
+In one test run, the LLM zoomed and cropped but never called `add_clue`, producing 0 clues. The entire investigation was built on the LLM's ungrounded guess.
+
+**Mitigation applied**: The analyze node now checks clue count after the initial pass and retries with a more directive prompt if fewer than 3 clues were extracted.
+
+### 10. Google Maps Places Coverage Is Sparse in Rural/Niche Areas
 
 A live text search for "wineries near Berry NSW Australia" returned only 2 results (Silos Estate and Two Figs Winery), despite there being many more wineries in the Shoalhaven region. The Google Maps Places API has known coverage gaps for niche businesses, especially outside major cities.
 
@@ -63,19 +81,19 @@ A live text search for "wineries near Berry NSW Australia" returned only 2 resul
 
 ## Tool-Level Limitations
 
-### 7. Street View Coverage Gaps
+### 11. Street View Coverage Gaps
 
 Google Street View is available at major roads and tourist areas, but large parts of the world have no coverage at all. Rural roads, private property, internal paths, and many countries (notably most of Africa, Central Asia, and parts of China) are not covered. Even where coverage exists, it may be years out of date.
 
 **Impact**: The agent cannot use Street View as a verification tool for locations outside covered areas. It currently returns an error message when coverage is unavailable, but does not suggest alternative verification strategies.
 
-### 8. Satellite Imagery Comparison Is Extremely Difficult for LLMs
+### 12. Satellite Imagery Comparison Is Extremely Difficult for LLMs
 
 The `get_satellite_image` tool returns a top-down satellite view. Comparing this to a ground-level photograph requires the LLM to mentally reconstruct the 3D scene from a 2D overhead perspective. Current vision models are not reliably capable of this spatial reasoning.
 
 **Impact**: Satellite imagery is most useful for verifying terrain type, coastline shape, or vegetation patterns at a macro level. It is unreliable for verifying specific buildings or venues from ground-level photos.
 
-### 9. No Image Comparison Tool
+### 13. No Image Comparison Tool
 
 The agent can retrieve satellite imagery or Street View images, but has no dedicated tool for side-by-side image comparison. It relies on the LLM holding both images in context and reasoning about their similarity. This is limited by:
 
@@ -85,7 +103,7 @@ The agent can retrieve satellite imagery or Street View images, but has no dedic
 
 **Impact**: Visual verification is the most important step in geolocation, and it depends entirely on the LLM's vision capability rather than a structured comparison approach.
 
-### 10. Tavily Search Depth Is Limited
+### 14. Tavily Search Depth Is Limited
 
 While Tavily's "advanced" search depth provides richer results than basic mode, it still returns relatively short content snippets. For geolocation, we often need to find specific details buried deep in a webpage (e.g. a winery's exact address, a description of their grounds, mentions of nearby landmarks). Tavily may surface the right page but not extract the specific detail needed.
 
@@ -95,7 +113,7 @@ While Tavily's "advanced" search depth provides richer results than basic mode, 
 
 ## Architectural Limitations
 
-### 11. Context Window Accumulation
+### 15. Context Window Accumulation
 
 Each investigation iteration adds messages to the LangGraph state: system prompt, image (as base64), state summary, LLM responses, and tool results. After several iterations, the accumulated context can approach or exceed the LLM's context window. The current architecture does not implement:
 
@@ -105,7 +123,7 @@ Each investigation iteration adds messages to the LangGraph state: system prompt
 
 **Impact**: Investigations with many iterations (6+) may hit context limits, causing truncation or API errors, especially with lower-context models.
 
-### 12. Single Image Input Only
+### 16. Single Image Input Only
 
 The agent is designed to investigate a single photograph. Many real geolocation scenarios involve multiple photos from the same location (different angles, different zoom levels, interior and exterior shots). The current architecture has no mechanism to:
 
@@ -115,7 +133,7 @@ The agent is designed to investigate a single photograph. Many real geolocation 
 
 **Impact**: Users with multiple related photos must run separate investigations and mentally correlate the results.
 
-### 13. No Investigation Persistence or Resume
+### 17. No Investigation Persistence or Resume
 
 The investigation state exists only in memory during a single run. If the process is interrupted, all accumulated clues, hypotheses, and evidence are lost. There is no:
 
@@ -125,7 +143,7 @@ The investigation state exists only in memory during a single run. If the proces
 
 **Impact**: Long investigations (many iterations, expensive API calls) cannot be recovered if interrupted.
 
-### 14. Hard-Coded Tool Round Limits
+### 18. Hard-Coded Tool Round Limits
 
 Each node has a fixed maximum number of tool-calling rounds:
 
@@ -137,13 +155,13 @@ These limits exist to prevent runaway API costs, but they are not adaptive. A co
 
 **Impact**: The agent may be cut off mid-investigation or waste resources on rounds that add no value. These limits should ideally be configurable or adaptive.
 
-### 15. No Parallel Tool Execution
+### 19. No Parallel Tool Execution
 
 Within each node, tool calls are executed sequentially. If the LLM requests multiple independent tool calls in a single response (e.g. three different web searches), they are executed one at a time. LangGraph supports parallel tool execution, but the current node implementations do not use it.
 
 **Impact**: Investigation rounds are slower than necessary. Parallel execution could significantly reduce wall-clock time per iteration.
 
-### 16. No Cost Tracking or Budget Control
+### 20. No Cost Tracking or Budget Control
 
 The agent makes LLM calls (vision model, with large base64 images) and external API calls (Tavily, SerpAPI, Google Maps) with no tracking of:
 
@@ -157,13 +175,13 @@ The agent makes LLM calls (vision model, with large base64 images) and external 
 
 ## Geolocation-Specific Limitations
 
-### 17. EXIF Data Is Almost Always Stripped
+### 21. EXIF Data Is Almost Always Stripped
 
 Modern social media platforms, messaging apps, and image sharing services strip EXIF metadata (including GPS coordinates) before serving images. The `extract_exif` tool will return useful data only for photos taken directly from a camera or phone and not shared through any platform.
 
 **Impact**: The GPS "shortcut" (finding exact coordinates in EXIF) will rarely work in practice. The agent should not rely on it.
 
-### 18. Night, Indoor, and Featureless Photos
+### 22. Night, Indoor, and Featureless Photos
 
 The agent's effectiveness drops substantially for:
 
@@ -173,13 +191,13 @@ The agent's effectiveness drops substantially for:
 
 **Impact**: Some photos are genuinely ungeolocatable. The agent should recognise this and report low confidence rather than forcing a guess.
 
-### 19. Temporal Mismatch
+### 23. Temporal Mismatch
 
 Google Street View and satellite imagery have capture dates that may differ from the photo being investigated by months or years. Buildings may have been constructed, demolished, or renovated. Vegetation changes seasonally. Signs and businesses change.
 
 **Impact**: The agent may fail to match a location because the reference imagery is outdated, or incorrectly reject a valid candidate because it looks different at a different point in time.
 
-### 20. Language and Script Barriers
+### 24. Language and Script Barriers
 
 The LLM's ability to read text in images varies by script. Latin script text is reliably extracted; Cyrillic, Arabic, CJK, Devanagari, and other scripts may be read with lower accuracy. This affects:
 
@@ -189,7 +207,7 @@ The LLM's ability to read text in images varies by script. Latin script text is 
 
 **Impact**: Geolocation accuracy is likely lower for photos from regions using non-Latin scripts, unless a dedicated OCR tool for that script is added.
 
-### 21. LLM Hallucination and Overconfidence
+### 25. LLM Hallucination and Overconfidence
 
 Vision LLMs can "see" things that are not present, or interpret ambiguous features with false certainty. Common failure modes:
 
@@ -202,7 +220,7 @@ The system prompt explicitly warns against these behaviours, but the LLM may not
 
 **Impact**: The confidence levels reported by the agent may not be well-calibrated. External validation of results is advisable.
 
-### 22. No Ground Truth Evaluation Framework
+### 26. No Ground Truth Evaluation Framework
 
 There is no automated way to evaluate the agent's accuracy against a benchmark dataset. Geolocation research commonly uses datasets like GeoGuessr or IM2GPS for evaluation, measuring distance error between predicted and actual coordinates. The current project has:
 
@@ -216,7 +234,7 @@ There is no automated way to evaluate the agent's accuracy against a benchmark d
 
 ## API and Cost Constraints
 
-### 23. Rate Limits
+### 27. Rate Limits
 
 | Service | Known Limits |
 |---------|-------------|
@@ -229,7 +247,7 @@ A single investigation with 10 iterations and aggressive tool use could consume 
 
 **Impact**: The free tiers of these APIs will support only a few investigations per month. Production use requires paid tiers and cost monitoring.
 
-### 24. Google Maps API Billing Complexity
+### 28. Google Maps API Billing Complexity
 
 Google Maps Platform bills separately for:
 
