@@ -1,6 +1,6 @@
 # Geolocation Agent
 
-A geolocation agent that determines where a photo was taken through iterative hypothesis testing.
+A geolocation agent that determines where a photo was taken through iterative exploration of hypotheses. Collecting clues and proceeding as a good detective should.
 
 ## Setup
 
