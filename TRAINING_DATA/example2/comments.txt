@@ -1,0 +1,4 @@
+This trace comes from a youtube video which could ofcourse be edited. 
+Rainbolt may have left out all sorts of failed attempts and incorrect hypotheses.
+So we should not infer too deterministic of a path from this linear recounting of the geolocation process.
+We still need to assume that it is neccesary to go wide.

@@ -1,0 +1,20 @@
+The model honed in on wineries in France.
+
+A few things wrong with that.
+
+Firstly, It seemed to overcommit to one location. It did not keep a wide view of the possible hypotheses. There was nothing to rule out the other hypotheses.
+
+And then secondly, I don't think it found enough confirmatory evidence to commit to what it finally said was the location. I can't see any confirmatory evidence.
+
+And it was incorrect in the end.
+
+Unsurprising given the path it followed.
+
+
+
+My advice:
+- Do not focus too much on one hypothesis area/location unless we find confirmatory evidence that strongly suggests we are on the right track.
+
+Also, you should collect the confirmatory evidence so that we can show it to the user, so they can verify that you are correct. 
+
+Lets work out how we are going to collect confirmatory evidence.

@@ -1,0 +1,37 @@
+
+
+In this video, Rainbolt demonstrates his geolocation process to identify the exact location of a photo featuring Jeffrey Epstein and Les Wexner. Here is a detailed account of the steps he used:
+
+### 1. Initial Visual Assessment [[00:00](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=0)]
+
+Rainbolt begins by analyzing the photo's general setting. He takes note of the subjects' **attire**, the specific style of the **white chairs**, and the people visible in the background [[00:04](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=4)].
+
+### 2. Contextual Research [[00:08](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=8)]
+
+Knowing that Les Wexner is in the photo, he performs "basic research" into recurring events hosted by Wexner. He identifies the **New Albany Classic**, an equestrian event Wexner hosted annually for roughly 20 years [[00:14](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=14)].
+
+### 3. Matching Physical Details [[00:26](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=26)]
+
+To verify the event, he looks for footage from past New Albany Classics.
+
+- **The Chairs:** He finds a YouTube video of a David Archuleta performance at the event and notices a white chair in the background. He matches the design and even the **specific screw placement** on the chair to those in the target photo [[00:32](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=32)].
+    
+- **The Wristband:** Realizing chairs can be rented and aren't definitive proof, he looks for more unique clues. While zooming in on a cup Epstein is holding, he notices a **wristband** on Wexner’s wrist [[00:44](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=44)]. The wristband ends in the letters "**IC**" [[00:49](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=49)].
+    
+- **Branding Match:** He confirms that the font of the "IC" on the wristband perfectly matches the font used in the **New Albany Classic branding** [[00:55](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=55)].
+    
+
+### 4. Digital Forensics & Mapping [[01:02](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=62)]
+
+To find the exact spot on the property:
+
+- **Wayback Machine:** He locates the old domain for the event (`newalbanyclassic.com`) and uses the **Wayback Machine** to access a 2002 archive [[01:06](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=66)].
+    
+- **Property Map:** The archive provides a **map of the property**, showing the specific layout of where attendees would have been seated during the event [[01:11](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=71)].
+    
+
+### 5. Final Triangulation [[01:16](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=76)]
+
+He cross-references the historical map with a 2009 YouTube slideshow of the event. By comparing these sources, he is able to **match a specific tree** in the background of the original photo to the physical layout of the property, confirming the exact location [[01:23](http://www.youtube.com/watch?v=Df4HuwCQY7A&t=83)].
+
+**Video Link:** [rainbolt found jeffery epstein](http://www.youtube.com/watch?v=Df4HuwCQY7A)
